@@ -94,25 +94,31 @@ def themepage(request, theme):
 	return render(request, "emails/theme.html", {'emails': emails, 'theme': theme, 'participants': participants, 'themes': themes})
 
 def addtheme(request):
-	participants = userlist()
-	themes = themelist()
+	def render_form(title="", description="", error=""):
+		participants = userlist()
+		themes = themelist()
+		return render(request, "emails/addtheme.html", {'participants': participants, 'themes': themes, 'title': title, 'description': description, 'error': error})
+
 	if request.method == "POST" and request.user.is_superuser:
 		title = request.POST.get('title')
 		description = request.POST.get('description')
 		if not title or not description:
 			error = "Please enter a title and a description"
-			return render(request, "emails/addtheme.html", {'participants': participants, 'themes': themes, 'title': title, 'description': description, 'error': error})
+			return render_form(title, description, error)
 		else:
 			# create new theme and update caches
 			theme = Theme()
 			theme.title = title
+			if Theme.objects.get(title=title):
+				error = "A theme with that title already exists."
+				return render_form(error=error)
 			theme.description = description
 			theme.save()
 			themelist(True)
 			theme_by_title(title, True)
 			return redirect('/')
 	else:
-		return render(request, "emails/addtheme.html", {'participants': participants, 'themes': themes})
+		return render_form()
 
 def add(request):
 	def render_form(selected_theme="", recipient="", timesent="", subject="", body="", error=""):

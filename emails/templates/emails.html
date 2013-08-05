@@ -19,7 +19,7 @@
             To: {{email.recipient}}<br>
             {% if email.time_sent %} Date: {{email.time_sent}} {% endif %} <br>
             Subject: {{email.subject}} <br><br>
-            {{email.body}}
+            {{email.body|linebreaks}}
             <br><br><br>
          {% endfor %}
       {% else %}
