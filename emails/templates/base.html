@@ -1,0 +1,114 @@
+{% load staticfiles %}
+{% load tags %}
+
+{% url 'themepage' as themepage %}
+{% url 'useremails' as useremails %}
+{% url 'add' as add %}
+{% url 'login' as login %}
+{% url 'signup' as signup %}
+<!DOCTYPE html>
+<html lang = "en">
+
+
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content=""> 
+
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href = "{% static 'emails/style.css' %}" />
+
+	<title>{% block title %} {% endblock %} - We2</title>
+</head>
+
+<body>
+	<!-- Wrap all page content here -->
+	<div id="wrap">
+		<!-- Static navbar -->
+		<div class="navbar navbar-static-top">
+			<div class="container">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="/">We Think 2</a>
+				<div class="nav-collapse collapse">
+					<ul class="nav navbar-nav">
+						<li class="dropdown {% active request useremails %}">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown">Participants<b class="caret"></b></a>
+								<ul class="dropdown-menu">
+									{% for participant in participants %}
+										<li><a href="/participant/{{participant}}">
+											{{participant.first_name}} {{participant.last_name}}
+										</a></li>
+									{% endfor %}
+								</ul>
+							</li>
+						<li class="dropdown {% active request themepage %}">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown">Themes<b class="caret"></b></a>
+								<ul class="dropdown-menu">
+									{% for theme in themes %}
+										<li><a href="/theme/{{theme}}">
+											{{theme}}
+										</a></li>
+									{% endfor %}
+								</ul>
+							</li>
+						<li class="{% active request add %}"><a href="/add">Submit an Email</a></li>
+						{% if request.user.is_superuser%} <li><a href="/newtheme">Add Theme</a></li>{% endif %}
+					</ul>
+
+
+					<ul class="nav navbar-nav pull-right">
+						{% if request.user.is_authenticated %}
+							<li><a href="/participant">{{request.user.username}}</a></li>
+							<li class="dropdown">
+								<a href="#" class="dropdown-toggle" data-toggle="dropdown"><b class="caret"></b></a>
+								<ul class="dropdown-menu">
+									<li><a href="#"><p class="text-danger">Coming Soon</p></a></li>
+									<li class="disabled"><a href="#">Manage Your Emails</a></li>
+									<li class="disabled"><a href="#">Edit Account</a></li>
+									<li class="disabled"><a href="#">Favorites</a></li>
+									<li class="disabled"><a href="#">Invite a Friend to Participate</a></li>
+									<li class="divider"></li>
+									<li><a href="/logout">Log Out</a></li>
+								</ul>
+							</li>
+						{% else %}
+							<li class="{% active request login %}"> <a href="/login">login</a></li>
+							<li class="{% active request signup %}"> <a href="/signup" >signup</a></li>
+						{% endif %}
+					</ul>
+
+
+				</div><!--/.nav-collapse -->
+			</div>
+		</div>
+
+		<!-- Begin page content -->
+		<div class="container">
+			{% block content %}
+			{% endblock %}
+		</div>
+	</div>
+
+	<div id="footer">
+		<div class="container">
+			<p class="text-muted credit">Website by <a href="/about">Arthur Wang</a>
+		</div>
+	</div>
+
+
+
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
+    {% block js %}
+    {% endblock %}
+
+
+</body>
+
+</html>

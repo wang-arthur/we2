@@ -1,0 +1,19 @@
+{% extends "emails.html" %}
+
+{% block title %} 
+{{user}}
+{% endblock %}
+
+
+{% block heading %}
+	From the Sent Mail Folder of
+		{% if user.first_name %}
+			{{user.first_name}} {{user.last_name}}
+		{% else %}
+			{{user}}
+		{% endif %}
+{% endblock %}
+
+
+{% block js %}
+{% endblock %}

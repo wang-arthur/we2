@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %} We, Too {% endblock %}
+
+
+
+
+{% block content %}
+<div>
+	<h2>We Think Alone Too</h2>
+	
+	An unauthorized, interactive version of<br>
+	<a href="http://wethinkalone.com">We Think Alone</a>, by Miranda July
+	<br><br><br>
+</div>
+
+	<div class="row">
+		<div class="col-lg-7 col-6">
+			<p class="lead">Emails from the
+			sent mail folders of:</p>
+
+			{% for participant in participants %}
+				<a href = "/participant/{{participant}}" class="{% cycle 'one' 'two' %}">
+					{% if participant.first_name %}
+						{{participant.first_name}} {{participant.last_name}}</a><br>
+					{% else %}
+						{{participant}}</a><br>
+					{% endif %}
+
+			{% endfor %}
+			<br>
+		</div>
+
+		<div class="col-lg-5 col-6">
+			<p class="lead">On the following themes:<br></p>
+			{% for theme in themes %}
+				<a href = "/theme/{{theme}}" class="{% cycle 'two' 'one' %}">{{theme.description}}</a><br>
+			{% endfor %}
+		</div>
+	</div>
+
+	{% endblock %}
+
+	{% block js %}
+	{% endblock %}

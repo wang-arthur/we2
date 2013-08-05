@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %} Add a Theme {% endblock %}
+
+{% block content %}
+
+{% if not user.is_superuser %}
+<legend>Add a Theme</legend>
+<p class="lead">
+	Only administrators can add themes.
+</p>
+
+{% else %}
+
+<div class="row">
+	<div class="col-1 col-lg-3"></div>
+	<div class="col-10 col-lg-6">
+<form method="post">
+	{% csrf_token %}
+	<fieldset>		
+		<legend>Add a Theme</legend>
+
+		<div class="form-group {% if not title and request.method == "POST" %} has-error{% endif %}">
+			<label class="control-label" for="inputError">Title (short)</label>
+			<input type="text" class="form-control" id="inputError" name="title" placeholder="example: self" value={{title}}>
+		</div>
+
+
+		<div class="form-group {% if not description and request.method == "POST" %} has-error{% endif %}">
+			<label class = "control-label" for="inputError">Description</label>
+			<input type="text" class="form-control" id="inputError" name="description" placeholder="example: an email to yourself" value="{{description}}">
+		</div>
+
+		{% if error %}<div class="alert alert-danger"> {{error}} </div> {% endif %}
+		<button type="submit" class="btn btn-default">Submit</button>
+	</fieldset>
+</form>
+</div>
+</div>
+{% endif %}
+{% endblock %}

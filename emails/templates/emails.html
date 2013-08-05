@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<div class="row">
+   <div class="col-lg-8 col-10 col-offset-2">
+      <legend>{% block heading %}{% endblock %}</legend>
+
+      {% if emails %}
+         {% for email in emails %}
+            {% if not theme %}
+               Theme: <a href="/theme/{{email.theme}}">{{email.theme}}</a> <br>
+            {% endif %}
+            ---------- Forwarded message ----------<br>
+            
+            From: {% if not user %}<a href="/participant/{{email.sender}}">{% endif %}{{email.sender.first_name}} {{email.sender.last_name}}{% if not user %}</a>{% endif %}<br>
+            
+            To: {{email.recipient}}<br>
+            {% if email.time_sent %} Date: {{email.time_sent}} {% endif %} <br>
+            Subject: {{email.subject}} <br><br>
+            {{email.body}}
+            <br><br><br>
+         {% endfor %}
+      {% else %}
+
+
+      {% endif %}
+   </div>
+</div>
+
+{% if emails %}
+<br><br><br>
+<form method="post">
+   {% csrf_token %}
+   <div class="row">
+      <div class="col-lg-8 col-10 col-offset-2">
+         <div class="input-group">
+            <span class="input-group-addon input-sm">
+               Email this page:
+            </span>
+            <input type="text" class="form-control input-sm" placeholder="email address">
+            <span class="input-group-btn input-sm">
+               <span class="input-group-btn input-sm">
+                  <button type="submit" class="btn btn-default" type="button" disabled>Coming Soon!</button>
+               </span>
+            </span>
+         </div><!-- /input-group -->
+      </div>
+   </div>
+</form>
+{% endif %} 
+{% endblock %}
+
+{% block js %}
+{% endblock %}
