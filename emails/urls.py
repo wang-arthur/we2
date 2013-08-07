@@ -8,12 +8,14 @@ urlpatterns = patterns('',
 	url(r'^theme/(?P<theme>q?[a-zA-Z]{3,25})?/?$', views.themepage, name='themepage'),
 	url(r'^participant/(?P<username>q?[a-zA-Z0-9_-]{3,20})?/?$', views.useremails, name='useremails'),
 	url(r'^add/?$', views.add, name='add'),
+	#add theme page -- superuser only
+	url(r'^newtheme/?$', views.addtheme, name='addtheme'),
+
 	url(r'^signup/?$', views.signup, name='signup'),
 	url(r'^login/?$', views.userlogin, name='login'),
 	url(r'^logout/?$', views.userlogout, name='logout'),
+	url(r'^account/settings?$', views.settings, name='settings'),
 	
-	#add theme page -- superuser only
-	url(r'^newtheme/?$', views.addtheme, name='addtheme'),
 	url(r'^about/?$', views.about, name='about'),
 )
 

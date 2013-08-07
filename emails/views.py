@@ -106,10 +106,13 @@ def addtheme(request):
 			error = "Please enter a title and a description"
 			return render_form(title, description, error)
 		else:
+			if not title.isalpha():
+				error = "Theme titles must be letters only with no spaces"
+				return render_form(error=error)
 			# create new theme and update caches
 			theme = Theme()
 			theme.title = title
-			if Theme.objects.get(title=title):
+			if Theme.objects.filter(title=title):
 				error = "A theme with that title already exists."
 				return render_form(error=error)
 			theme.description = description
@@ -168,8 +171,9 @@ def useremails(request, username):
 			user=request.user
 			username = request.user.username
 	else:
+		if username is None:
+			return redirect('/')
 		user = user_by_username(username)
-
 	emails = emails_by_user(user)
 	return render(request, "emails/participant.html", {'emails': emails, 'user': user, 'themes': themes, 'participants': participants})
 
@@ -200,13 +204,65 @@ def error_check(username, password, verify=None, email=None, firstname=None):
 				error = "Passwords don't match."
 	if email is not None:
 		if not valid_email(email):
-			error = "Please enter a valid email address"
+			error = "Please enter a valid email address or leave the email field blank."
 	if firstname is not None and not firstname:
 		error = "Please enter your first name"
 	# error: invalid username or password
 	if not valid_username(username) or not valid_password(password):
 		error = "Please enter a valid username and password."	
 	return error
+
+def settings(request):
+	def render_form(error="", success=""):
+		participants = userlist()
+		themes = themelist()
+		return render(request, "emails/settings.html", {'participants': participants, 'themes': themes, 'error': error, 'success': success})
+	if request.method == 'POST' and request.user.is_authenticated():
+		if 'changename' in request.POST:
+			firstname = request.POST.get('firstname')
+			lastname = request.POST.get('lastname')
+			if not firstname:
+				error = "Your first name cannot be blank."
+				return render_form(error=error)
+			user = request.user
+			user.first_name = firstname
+			user.last_name = lastname
+			user.save()
+			userlist(True)
+			success = "You have changed your name to: %s %s" %(firstname, lastname)
+			return render_form(success=success)
+		if 'changeemail' in request.POST:
+			email = request.POST.get('email')
+			if email and not valid_email(email):
+				error = "Please enter a valid email address or leave the field blank to clear your email address."
+				return render_form(error=error)
+			user = request.user
+			user.email = email
+			user.save()
+			if email:
+				success = "You have changed your email address to: %s." %email
+			else:
+				success = "You have cleared your email address."
+			return render_form(success=success)
+		if 'changepass' in request.POST:
+			oldpassword = request.POST.get('oldpass')
+			newpassword = request.POST.get('newpass')
+			user = authenticate(username=request.user.username, password=oldpassword)
+			if user is None:
+				error = "The old password you entered is not valid.  Please try again."
+				return render_form(error=error)
+			elif not valid_password(newpassword):
+				error = "Your new password must be between 3 and 20 characters long."
+				return render_form(error=error)
+			else:
+				user.set_password(newpassword)
+				user.save()
+				success = "You have successfully changed your password."
+				return render_form(success=success)
+	else:
+		participants = userlist()
+		themes = themelist()
+		return render_form()
 
 
 def signup(request):
@@ -231,7 +287,7 @@ def signup(request):
 			user = User.objects.create_user(username=username, password=password)
 			user.first_name=firstname
 			user.last_name=lastname
-			user.email=username
+			user.email=email
 			user.save()
 			user=authenticate(username=username, password=password)
 			login(request, user)
