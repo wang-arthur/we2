@@ -25,7 +25,7 @@ def userlist(update = False):
 	users = cache.get(key)
 	if users is None or update:
 		logging.error("participant list DB Query")
-		users = User.objects.all().order_by("username")
+		users = User.objects.all().order_by("first_name")
 		users = list(users)
 		cache.set(key, users)
 	return users
@@ -35,14 +35,14 @@ def themelist(update=False):
 	themes = cache.get(key)
 	if themes is None or update:
 		logging.error("theme list DB query")
-		themes = Theme.objects.all()
+		themes = Theme.objects.all().order_by("-created")
 		themes = list(themes)
 		cache.set(key, themes)
 	return themes
 
 
 def theme_by_title(title, update = False):
-	key = title
+	key = '123'+title
 	theme = cache.get(key)
 	if theme is None or update:
 		theme = get_object_or_404(Theme, title=title)
@@ -50,28 +50,35 @@ def theme_by_title(title, update = False):
 	return theme
 
 def emails_by_theme(theme, update=False):
-	key = str(theme) + "emails"
+	key = '930'+str(theme)
 	emails = cache.get(key)
 	if emails is None or update:
 		logging.error(str(theme) + "email DB query")
-		#theme = theme_by_title(title)
-		emails = Email.objects.filter(theme=theme)
+		emails = Email.objects.filter(theme=theme).order_by("-created")
 		emails = list(emails)
 		cache.set(key, emails)
 	return emails
 
-def emails_by_user(user, update=False):
-	key = str(user.pk)
+def emails_by_user(user, update=False, delete=False):
+	key = '999'+str(user.pk)
 	emails = cache.get(key)
+	if delete:
+		if emails:
+			cache.delete(key)
+		return
 	if emails is None or update:
-		emails = Email.objects.filter(sender=user)
+		emails = Email.objects.filter(sender=user).order_by("-created")
 		emails = list(emails)
 		cache.set(key, emails)
 	return emails
 
-def user_by_username(username, update=False):
-	key = 'uname' + username
+def user_by_username(username, update=False, delete=False):
+	key = '540' + username
 	user = cache.get(key)
+	if delete:
+		if user:
+			cache.delete(key)
+		return
 	if user is None or update:
 		user = get_object_or_404(User, username=username)
 		cache.set(key, user)
@@ -136,7 +143,7 @@ def add(request):
 		timesent = request.POST.get('timesent')
 		subject = request.POST.get('subject')
 		body = request.POST.get('body')
-		if not selected_theme or not recipient or not subject or not body:
+		if not selected_theme or not recipient or not body:
 			error = "Please complete all required fields"
 			return render_form(selected_theme, recipient, timesent, subject, body, error)
 
@@ -144,8 +151,10 @@ def add(request):
 		email.theme = theme_by_title(selected_theme)
 		email.sender = request.user
 		email.recipient = recipient
-		if email.time_sent:
+		if timesent:
 			email.time_sent = datetime.datetime.strptime(timesent, '%Y-%m-%dT%H:%M')
+		if not subject:
+			subject = "(no subject)"
 		email.subject = subject
 		email.body = body
 		email.save()
@@ -160,22 +169,69 @@ def add(request):
 		return render_form()
 
 def useremails(request, username):
-	participants = userlist()
-	themes = themelist()
-	if request.user.is_authenticated():
-		if username == request.user.username:
-			return redirect('/participant')
-		if username:
-			user = user_by_username(username)
-		else:
-			user=request.user
-			username = request.user.username
+	def render_form(user = request.user, success="", error=""):
+		participants = userlist()
+		themes = themelist()
+		emails = emails_by_user(user)
+		return render(request, "emails/participant.html", {'emails': emails, 'user': user, 'themes': themes, 'participants': participants, 'success': success, 'error': error})
+	# post cases include: delete email, edit email, and forward page to friend
+	if request.method == "POST" and request.user.is_authenticated():
+		if 'delete' in request.POST:
+			emailid = request.POST.get('delete')
+			email = get_object_or_404(Email, pk=int(emailid))
+			theme = email.theme
+			email.delete()
+			#update caches for emails_by_theme, emails_by_user
+			emails_by_user(request.user, True)
+			emails_by_theme(theme, True)
+			success = "Email deleted!"
+			return render_form(success=success)
+			#return redirect(request.path + "?deleted=True")
+		elif 'edit' in request.POST:
+			# get all submitted fields
+			emailid = int(request.POST.get('edit'))
+			email = get_object_or_404(Email, pk=emailid)
+			oldtheme = email.theme
+			newtheme  = theme_by_title(request.POST.get('edittheme%d' %emailid))
+			time_sent = request.POST.get('edittimesent%d' %emailid)
+			recipient = request.POST.get('editrecipient%d' %emailid)
+			subject = request.POST.get('editsubject%d' %emailid)
+			body = request.POST.get('editbody%d' %emailid)
+			if not newtheme or not recipient or not body:
+				error = "Emails must include themes, recipients, and body text"
+				return render_form(error=error)
+			# edit email and save changes
+			email = get_object_or_404(Email, pk=emailid)
+			email.theme = newtheme
+			if time_sent:
+				email.time_sent = datetime.datetime.strptime(time_sent, '%Y-%m-%dT%H:%M')
+			email.recipient = recipient
+			email.subject = subject
+			email.body = body
+			email.save()
+			#update caches
+			emails_by_user(request.user, True)
+			emails_by_theme(oldtheme, True)
+			emails_by_theme(newtheme, True)
+			success = "Changes saved!"
+			return render_form(success=success)
+		
+		#elif 'emailfriend' in request.POST:
+	
+	# get request
 	else:
-		if username is None:
-			return redirect('/')
-		user = user_by_username(username)
-	emails = emails_by_user(user)
-	return render(request, "emails/participant.html", {'emails': emails, 'user': user, 'themes': themes, 'participants': participants})
+		if request.user.is_authenticated():
+			if username == request.user.username:
+				return redirect('/participant')
+			if username:
+				user = user_by_username(username)
+			else:
+				user=request.user
+		else:
+			if username is None:
+				return redirect('/')
+			user = user_by_username(username)
+		return render_form(user=user)
 
 
 
@@ -259,6 +315,21 @@ def settings(request):
 				user.save()
 				success = "You have successfully changed your password."
 				return render_form(success=success)
+		if 'deleteaccount' in request.POST:
+			user = authenticate(username=request.user.username, password=request.POST.get('deletepass'))
+			if user is None:
+				error = "The password you entered is not valid."
+				return render_form(error=error)
+			else:
+				user.delete()
+				userlist(True)
+				#update all emails by theme
+				for theme in themelist():
+					emails_by_theme(theme, True)
+				# user_by_username and emails_by_user should be updated for cache space
+				user_by_username(user.username, delete=True)
+				emails_by_user(user, delete=True)
+				return redirect("/")
 	else:
 		participants = userlist()
 		themes = themelist()

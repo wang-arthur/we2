@@ -27,7 +27,7 @@
 
 		<div class="form-group">
 			<label class="control-label">Change your email address<br>Current email: {{user.email}}</label>
-			<input type="text" class="form-control" id="inputError" name="email" placeholder="New Email Address" value={{email}}>
+			<input type="text" class="form-control" id="inputError" name="email" placeholder="New Email Address (Leave Blank to Clear)" value={{email}}>
 		</div>
 		<button type="submit" name = "changeemail" class="btn btn-default">Change Email</button>
 
@@ -38,6 +38,33 @@
 			<input type="password" class="form-control" id="inputError" name="newpass" placeholder="New Password">
 		</div>
 		<button type="submit" name = "changepass" class="btn btn-default">Change Password</button>
+
+		<br><br><br>
+  
+		<!-- Button trigger modal -->
+		<a data-toggle="modal" href="#delete" class="btn btn-danger btn-lg">Delete Account</a>
+
+		<!-- Modal -->
+		<div class="modal fade" id="delete">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+						<h4 class="modal-title">Are you sure?</h4>
+					</div>
+					<div class="modal-body">
+						Please enter your password to permanantly delete your account and all submitted emails.
+						<input type="password" class="form-control" name="deletepass" placeholder="Password">
+
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						<button type="submit" class="btn btn-danger" name="deleteaccount">Delete Account</button>
+					</div>
+				</div><!-- /.modal-content -->
+			</div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+
 	</fieldset>
 </form>
 

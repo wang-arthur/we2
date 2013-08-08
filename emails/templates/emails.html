@@ -6,25 +6,114 @@
 <div class="row">
    <div class="col-lg-8 col-10 col-offset-2">
       <legend>{% block heading %}{% endblock %}</legend>
+      {% if error %}<div class="alert alert-danger"> {{error}} </div> {% endif %}
+      {% if success %}<div class="alert alert-success"> {{success}} </div> {% endif %}
 
       {% if emails %}
+
+          {% if request.path == '/participant/' %}<form method="post"> {% csrf_token %}{% endif %}
          {% for email in emails %}
             {% if not theme %}
                Theme: <a href="/theme/{{email.theme}}">{{email.theme}}</a> <br>
             {% endif %}
             ---------- Forwarded message ----------<br>
             
-            From: {% if not user %}<a href="/participant/{{email.sender}}">{% endif %}{{email.sender.first_name}} {{email.sender.last_name}}{% if not user %}</a>{% endif %}<br>
+            From: {% if theme %}<a href="/participant/{{email.sender}}">{% endif %}{{email.sender.first_name}} {{email.sender.last_name}} {% if theme%}</a>{% endif %}<br>
             
             To: {{email.recipient}}<br>
             {% if email.time_sent %} Date: {{email.time_sent}} {% endif %} <br>
             Subject: {{email.subject}} <br><br>
             {{email.body|linebreaks}}
+
+                {% if request.path == '/participant/'%}
+                  <a data-toggle="modal" href="#edit{{email.id}}" class="btn btn-primary">Edit</a>
+                  <a data-toggle="modal" href="#delete{{email.id}}" class="btn btn-default">Delete</a>
+               
+
+                  <!-- Edit Modal -->
+                  <div class="modal fade" id="edit{{email.id}}">
+                     <div class="modal-dialog">
+                        <div class="modal-content">
+                           <div class="modal-header">
+                              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                              <h4 class="modal-title">Edit email</h4>
+                           </div>
+                           <div class="modal-body">
+                              <div class="form-group {% if not selected_theme and request.method == "POST" %} has-error{% endif %}">
+                                 <label class="control-label">Theme</label><br>
+                                 
+                                 {% for t in themes %}
+                                 <label class="radio-inline">
+                                    <input type="radio" name="edittheme{{email.pk}}" value="{{t.title}}" {% if t == email.theme %}checked="checked"{% endif %}> {{t}}
+
+                                 </label>
+                                 {% endfor %}
+                              </div>
+
+                              <div class="form-group">
+                                 <label> From:</label>
+                                 <input type="text" class="form-control" value = "{{request.user.first_name}} {{request.user.last_name}}" readonly>
+                              </div>
+
+                              <div class="form-group {% if not recipient and request.method == "POST" %} has-error{% endif %}">
+                                 <label class="control-label" for="inputError">To:</label>
+                                 <input type="text" class="form-control" id="inputError" name="editrecipient{{email.pk}}" placeholder="Recipient's first name or initials" value={{email.recipient}}>
+                              </div>
+
+                              <div class="form-group">
+                                 <label>Time Sent (optional)</label>
+                                 <input type="datetime-local" class="form-control" name="edittimesent{{email.pk}}" value={{email.time_sent|date:"Y-m-d\TH:i"}} >
+                              </div>
+
+                              <div class="form-group">
+                                 <label class = "control-label">Subject</label>
+                                 <input type="text" class="form-control" name="editsubject{{email.pk}}" placeholder="Email subject line" value="{{email.subject}}">
+                              </div>
+
+                              <div class="form-group {% if not body and request.method == "POST" %} has-error{% endif %}">
+                                 <label class="control-label" for="inputError">Body</label>
+                                 <textarea class="form-control" rows="5" id="inputError" name="editbody{{email.pk}}">{{email.body}}</textarea>
+                              </div>
+                           </div> <!-- form group -->
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" name="edit" value="{{email.id}}">Save Changes</button>
+                          </div>
+                        </div><!-- /.modal-content -->
+                     </div><!-- /.modal-dialog -->
+                  </div><!-- /.modal -->
+
+                  <!-- Delete Modal -->
+                  <div class="modal fade" id="delete{{email.id}}">
+                     <div class="modal-dialog">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title">Delete this email?</h4>
+                          </div>
+                          <div class="modal-body">
+                              ---------- Forwarded message ----------<br>
+            
+                              From: {% if theme %}<a href="/participant/{{email.sender}}">{% endif %}{{email.sender.first_name}} {{email.sender.last_name}} {% if theme%}</a>{% endif %}<br>
+                              
+                              To: {{email.recipient}}<br>
+                              {% if email.time_sent %} Date: {{email.time_sent}} {% endif %} <br>
+                              Subject: {{email.subject}} <br><br>
+                              {{email.body|linebreaks}}
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger" name="delete" value="{{email.id}}">Delete</button>
+                          </div>
+                        </div><!-- /.modal-content -->
+                     </div><!-- /.modal-dialog -->
+                  </div><!-- /.modal -->
+                {% endif %}
+
             <br><br><br>
          {% endfor %}
+       </form>
       {% else %}
-
-
       {% endif %}
    </div>
 </div>

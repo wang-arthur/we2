@@ -7,13 +7,15 @@
 {% block content %}
 
 
-   Note on Privacy: Please feel free to leave your last name blank, or to enter only the first letter of your last name.
-   Email addresses will not be published.
+   
 
 <div class="container">
  <form class="form-signup" method = "post">
    {% csrf_token %}
    <h2 class="form-signup-heading">Create an Account</h2>
+
+   <div class="alert alert-info">Privacy Note: Feel free to leave your last name blank, or to enter only the first letter of your last name.  Email addresses are also optional, and will not be published.</div>
+
    <input type="hidden" name="next_url" value = {{next_url}}>
 
    <input type="text" class="input-block-level" placeholder="First Name" name = "firstname" value = {{firstname}}>
@@ -28,14 +30,12 @@
    <input type="password" class="input-block-level" placeholder="Verify Password" name = "verify">
    <button class="btn btn-large btn-primary" type="submit">Create Account</button>
    <div><h5>Already have an account? <a href="/login">Log in.</a></h5></div>
-   {% if error %}<div class="alert alert-error">{{error}}</div>{% endif %}
+   {% if error %}<div class="alert alert-danger">{{error}}</div>{% endif %}
 </form>
 
 </div>
 <!-- Le styles -->
 
-
-<link href="../assets/css/bootstrap.css" rel="stylesheet">
 <style type="text/css">
 body {
  padding-bottom: 40px;
@@ -69,6 +69,5 @@ body {
 
 
 </style>
-<link href="../assets/css/bootstrap-responsive.css" rel="stylesheet">
 
 {% endblock %}
