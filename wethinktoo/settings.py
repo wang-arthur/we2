@@ -100,6 +100,7 @@ if DEBUG:
     from secrets import *
 #production
 else:
+    import os
     SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # List of callables that know how to import templates from various sources.
