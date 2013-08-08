@@ -212,7 +212,8 @@ def useremails(request, username):
 			#update caches
 			emails_by_user(request.user, True)
 			emails_by_theme(oldtheme, True)
-			emails_by_theme(newtheme, True)
+			if newtheme != oldtheme:
+				emails_by_theme(newtheme, True)
 			success = "Changes saved!"
 			return render_form(success=success)
 		
