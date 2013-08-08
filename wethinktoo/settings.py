@@ -1,6 +1,7 @@
 # Django settings for wethinktoo project.
 
-DEBUG = True
+DEBUG = False
+
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -91,8 +92,15 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
+
+
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'evis$0!bp7eh&870=^h*u(z9+*e@6k$&ewc@i0qj*0uf=hp10_'
+#development
+if DEBUG:
+    from secrets import *
+#production
+else:
+    SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -174,41 +182,40 @@ LOGGING = {
 
 
 
+if not DEBUG:
+    # uncomment for production:
+    # Parse database configuration from $DATABASE_URL
+    DATABASES = {}
+    import dj_database_url
+    DATABASES['default'] =  dj_database_url.config()
+
+    # Honor the 'X-Forwarded-Proto' header for request.is_secure()
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+    # Allow all host headers
+    ALLOWED_HOSTS = ['*']
+
+    # Static asset configuration
+    import os
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    STATIC_ROOT = 'staticfiles'
+    STATIC_URL = '/static/'
+
+    STATICFILES_DIRS = (
+        os.path.join(BASE_DIR, '../emails/static/emails'),
+    )
 
 
-# uncomment for production:
-# Parse database configuration from $DATABASE_URL
-DATABASES = {}
-import dj_database_url
-DATABASES['default'] =  dj_database_url.config()
+    os.environ['MEMCACHE_SERVERS'] = os.environ.get('MEMCACHIER_SERVERS', '').replace(',', ';')
+    os.environ['MEMCACHE_USERNAME'] = os.environ.get('MEMCACHIER_USERNAME', '')
+    os.environ['MEMCACHE_PASSWORD'] = os.environ.get('MEMCACHIER_PASSWORD', '')
 
-# Honor the 'X-Forwarded-Proto' header for request.is_secure()
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# Allow all host headers
-ALLOWED_HOSTS = ['*']
-
-# Static asset configuration
-import os
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-STATIC_ROOT = 'staticfiles'
-STATIC_URL = '/static/'
-
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, '../emails/static/emails'),
-)
-
-
-os.environ['MEMCACHE_SERVERS'] = os.environ.get('MEMCACHIER_SERVERS', '').replace(',', ';')
-os.environ['MEMCACHE_USERNAME'] = os.environ.get('MEMCACHIER_USERNAME', '')
-os.environ['MEMCACHE_PASSWORD'] = os.environ.get('MEMCACHIER_PASSWORD', '')
-
-CACHES = {
-  'default': {
-    'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
-    'TIMEOUT': 500,
-    'BINARY': True,
-    'OPTIONS': { 'tcp_nodelay': True }
-  }
-}
+    CACHES = {
+      'default': {
+        'BACKEND': 'django_pylibmc.memcached.PyLibMCCache',
+        'TIMEOUT': 500,
+        'BINARY': True,
+        'OPTIONS': { 'tcp_nodelay': True }
+      }
+    }
