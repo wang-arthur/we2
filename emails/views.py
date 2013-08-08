@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
 from django.http import HttpResponse
 from django.core.cache import cache
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.mail import send_mail
+#from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from models import Email, Theme
 
@@ -94,10 +95,34 @@ def index(request):
 	return render(request, "emails/index.html", {'participants': participants, 'themes': themes})
 
 def themepage(request, theme):
-	participants = userlist()
-	themes = themelist()
 	theme = theme_by_title(theme)
 	emails = emails_by_theme(theme)
+	
+	'''
+	# add option to email page to a friend
+	if request.method == 'POST' and request.user.is_authenticated():
+		subject = theme.title + " - We Think Alone Too"
+		from_email = request.user.email
+		if not from_email:
+			from_email = 'we2@gmail.com'
+		message = "Sent by %s" %request.user.email
+		for email in emails:
+
+		recipient_list = [request.POST.get('friendemail')]
+		for email in emails:
+			message += "---------- Forwarded message ----------\n"
+			message += "From: " + email.sender.first_name + " " + email.sender.last_name + "\n"
+			message += "To: " + email.recipient + "\n"
+			if email.time_sent:
+				message += "Date: " #ADD DATE FORMATTING
+			message += "Subject: " + email.subject + "\n\n"
+			message += email.body + "\n\n\n"
+		send_mail(subject, message, from_email, recipient_list)
+		# add success message
+		return redirect(request.path)
+	'''
+	participants = userlist()
+	themes = themelist()
 	return render(request, "emails/theme.html", {'emails': emails, 'theme': theme, 'participants': participants, 'themes': themes})
 
 def addtheme(request):
@@ -168,12 +193,16 @@ def add(request):
 	else:
 		return render_form()
 
+EMAIL_RE = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
+def valid_email(email):
+	return (EMAIL_RE.match(email) or email == "")
+
 def useremails(request, username):
-	def render_form(user = request.user, success="", error=""):
+	def render_form(user = request.user, success="", error="", test=""):
 		participants = userlist()
 		themes = themelist()
 		emails = emails_by_user(user)
-		return render(request, "emails/participant.html", {'emails': emails, 'user': user, 'themes': themes, 'participants': participants, 'success': success, 'error': error})
+		return render(request, "emails/participant.html", {'emails': emails, 'user': user, 'themes': themes, 'participants': participants, 'success': success, 'error': error, 'test': test})
 	# post cases include: delete email, edit email, and forward page to friend
 	if request.method == "POST" and request.user.is_authenticated():
 		if 'delete' in request.POST:
@@ -196,6 +225,8 @@ def useremails(request, username):
 			time_sent = request.POST.get('edittimesent%d' %emailid)
 			recipient = request.POST.get('editrecipient%d' %emailid)
 			subject = request.POST.get('editsubject%d' %emailid)
+			if not subject:
+				subject = "(no subject)"
 			body = request.POST.get('editbody%d' %emailid)
 			if not newtheme or not recipient or not body:
 				error = "Emails must include themes, recipients, and body text"
@@ -216,8 +247,16 @@ def useremails(request, username):
 				emails_by_theme(newtheme, True)
 			success = "Changes saved!"
 			return render_form(success=success)
-		
-		#elif 'emailfriend' in request.POST:
+		'''
+		# option to email page to a friend
+		elif 'sendemail' in request.POST:
+			friendemail = request.POST.get('friendemail')
+			if not valid_email(friendemail):
+				error = "The email addressed you entered is not valid."
+				return render_form(error=error)
+			body = ""
+		'''
+
 	
 	# get request
 	else:
@@ -232,7 +271,10 @@ def useremails(request, username):
 			if username is None:
 				return redirect('/')
 			user = user_by_username(username)
-		return render_form(user=user)
+		test=""
+		if 'test' in request.GET:
+			test = request.GET['test']
+		return render_form(user=user, test=test)
 
 
 
@@ -243,10 +285,6 @@ def valid_username(username):
 PASS_RE = re.compile(r"^.{3,20}$")
 def valid_password(password):
     return password and PASS_RE.match(password)
-
-EMAIL_RE = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
-def valid_email(email):
-  return (EMAIL_RE.match(email) or email == "")
 
 def error_check(username, password, verify=None, email=None, firstname=None):
 	error = ""

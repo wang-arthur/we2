@@ -110,14 +110,14 @@
                   </div><!-- /.modal -->
                 {% endif %}
 
-            <br><br><br>
+            <br><br>
          {% endfor %}
        </form>
       {% else %}
       {% endif %}
    </div>
 </div>
-
+<!--
 {% if emails %}
 <br><br><br>
 <form method="post">
@@ -128,17 +128,18 @@
             <span class="input-group-addon input-sm">
                Email this page:
             </span>
-            <input type="text" class="form-control input-sm" placeholder="email address">
+            <input type="email" class="form-control input-sm" placeholder="email address" name="friendemail">
             <span class="input-group-btn input-sm">
                <span class="input-group-btn input-sm">
-                  <button type="submit" class="btn btn-default" type="button" disabled>Coming Soon!</button>
+                  <button type="submit" class="btn btn-default" type="button" name="sendemail">Send</button>
                </span>
             </span>
-         </div><!-- /input-group -->
+         </div>
+
       </div>
    </div>
 </form>
-{% endif %} 
+{% endif %} -->
 {% endblock %}
 
 {% block js %}
