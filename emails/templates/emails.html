@@ -21,7 +21,7 @@
             From: {% if theme %}<a href="/participant/{{email.sender}}">{% endif %}{{email.sender.first_name}} {{email.sender.last_name}} {% if theme%}</a>{% endif %}<br>
             
             To: {{email.recipient}}<br>
-            {% if email.time_sent %} Date: {{email.time_sent}} {% endif %} <br>
+            {% if email.time_sent %} Date: {{email.time_sent|date:"l, F j, Y \a\t g:i A"}} {% endif %} <br>
             Subject: {{email.subject}} <br><br>
             {{email.body|linebreaks}}
 
